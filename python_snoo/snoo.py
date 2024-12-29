@@ -235,7 +235,7 @@ class Snoo:
     async def auth_snoo(self, id_token):
         hdrs = self.generate_snoo_auth_headers(id_token)
         r = await self.session.post(self.snoo_auth_url, data=self.snoo_auth_data, headers=hdrs)
-        return r
+        return await r.json()
 
     async def authorize(self) -> AuthorizationInfo:
         try:
@@ -243,8 +243,7 @@ class Snoo:
             access = amz["AccessToken"]
             _id = amz["IdToken"]
             ref = amz["RefreshToken"]
-            snoo = await self.auth_snoo(_id)
-            snoo_token = await snoo.json()
+            snoo_token = await self.auth_snoo(_id)
             snoo_expiry = snoo_token["expiresIn"] / 1.5
             snoo_token = snoo_token["snoo"]["token"]
             self.tokens = AuthorizationInfo(snoo=snoo_token, aws_access=access, aws_id=_id, aws_refresh=ref)
