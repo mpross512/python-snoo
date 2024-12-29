@@ -1,7 +1,15 @@
 # CHANGELOG
 
 
+## v0.2.1 (2024-12-29)
+
+
 ## v0.2.0 (2024-12-29)
+
+### Bug Fixes
+
+- Change auth_snoo logic
+  ([`ab3ad4f`](https://github.com/Lash-L/python-snoo/commit/ab3ad4f159a1fc80637dc085a156ee2542481c53))
 
 ### Features
 
