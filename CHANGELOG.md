@@ -1,7 +1,15 @@
 # CHANGELOG
 
 
+## v0.2.2 (2024-12-29)
+
+
 ## v0.2.1 (2024-12-29)
+
+### Bug Fixes
+
+- Add mashumaro and fix enum again
+  ([`8cb044e`](https://github.com/Lash-L/python-snoo/commit/8cb044eb23f1b65a91a862bf65e1c61579c868e0))
 
 
 ## v0.2.0 (2024-12-29)
