@@ -160,30 +160,33 @@ class Snoo:
         if status.is_error():
             _LOGGER.warning(f"Message failed with {status.status_code}, {status.error_data.__dict__}")
 
-    def send_command(self, command: str, device: SnooDevice, **kwargs):
+    async def send_command(self, command: str, device: SnooDevice, **kwargs):
         ts = int(dt.now().timestamp() * 10_000_000)
-        self.pubnub.publish().channel(f"ControlCommand.{device.serialNumber}").message(
-            {"ts": ts, "command": command, **kwargs}
+        await (
+            self.pubnub.publish()
+            .channel(f"ControlCommand.{device.serialNumber}")
+            .message({"ts": ts, "command": command, **kwargs})
+            .future()
         )
 
-    def start_snoo(self, device: SnooDevice):
-        self.send_command("start_snoo", device)
+    async def start_snoo(self, device: SnooDevice):
+        await self.send_command("start_snoo", device)
 
-    def stop_snoo(self, device: SnooDevice):
-        self.send_command("go_to_state", device, **{"state": "ONLINE", "hold": "off"})
+    async def stop_snoo(self, device: SnooDevice):
+        await self.send_command("go_to_state", device, **{"state": "ONLINE", "hold": "off"})
 
-    def set_level(self, device: SnooDevice, level: SnooStates):
-        self.send_command("go_to_state", device, **{"state": level.value, "hold": "off"})
+    async def set_level(self, device: SnooDevice, level: SnooStates):
+        await self.send_command("go_to_state", device, **{"state": level.value, "hold": "off"})
 
-    def set_sticky_white_noise(self, device: SnooDevice, on: bool):
-        self.send_command(
+    async def set_sticky_white_noise(self, device: SnooDevice, on: bool):
+        await self.send_command(
             "set_sticky_white_noise",
             device,
             **{"state": "on" if on else "off", "timeout_min": 15},
         )
 
-    def get_status(self, device: SnooDevice):
-        self.send_command("send_status", device)
+    async def get_status(self, device: SnooDevice):
+        await self.send_command("send_status", device)
 
     async def auth_amazon(self):
         r = await self.session.post(self.aws_auth_url, data=self.aws_auth_data, headers=self.aws_auth_hdr)
