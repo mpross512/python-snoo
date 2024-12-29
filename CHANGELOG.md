@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.4 (2024-12-29)
+
+### Bug Fixes
+
+- Change to async
+  ([`e860bf6`](https://github.com/Lash-L/python-snoo/commit/e860bf61beaad5cc0a162d34c9359e817f1641e1))
+
+
 ## v0.2.3 (2024-12-29)
 
 ### Bug Fixes
