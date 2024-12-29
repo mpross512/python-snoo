@@ -7,58 +7,17 @@ import uuid
 from datetime import datetime as dt
 
 import aiohttp
-from pubnub.callbacks import SubscribeCallback
-from pubnub.enums import PNReconnectionPolicy, PNStatusCategory
+from pubnub.enums import PNReconnectionPolicy
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub_asyncio import PubNubAsyncio
 
 from .containers import (
     AuthorizationInfo,
-    SnooData,
     SnooDevice,
     SnooStates,
 )
 from .exceptions import InvalidSnooAuth, SnooAuthException, SnooDeviceError
 from .pubnub_async import SnooPubNub
-
-
-class MySubscribeCallback(SubscribeCallback):
-    def __init__(self, snoo_instance, device_id, message_type):
-        self.snoo_instance = snoo_instance
-        self.device_id = device_id
-        self.message_type = message_type
-
-    def status(self, pubnub, status):
-        if status.category == PNStatusCategory.PNUnexpectedDisconnectCategory:
-            pass  # Handle unexpected disconnect
-        elif status.category == PNStatusCategory.PNConnectedCategory:
-            pass  # This is expected for a subscribe, this means we are connected and subscribing
-        elif status.category == PNStatusCategory.PNReconnectedCategory:
-            pass  # Happens as part of a reconnect process
-        elif status.category == PNStatusCategory.PNDisconnectedCategory:
-            pass
-        elif status.is_error():
-            _LOGGER.error(f"Subscription error: {status}")
-
-    def presence(self, pubnub, presence):
-        pass  # Handle presence events if needed
-
-    def message(self, pubnub, message):
-        if self.message_type == "Activity":
-            if "system_state" in message.message:
-                try:
-                    data = SnooData.from_dict(message.message)
-                    _LOGGER.debug(data)
-                    self.snoo_instance.data_map[self.device_id] = data
-                    if self.device_id in self.snoo_instance.subscription_functions:
-                        self.snoo_instance.subscription_functions[self.device_id]()
-                except Exception as e:
-                    _LOGGER.error(f"Error processing message: {e}, Message: {message.message}")
-            else:
-                _LOGGER.debug(f"[{self.device_id}] Got message on {self.message_type} of {message.message}")
-        else:
-            _LOGGER.debug(f"[{self.device_id}] Got message on {self.message_type} of {message.message}")
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +86,7 @@ class Snoo:
         self.subscription_functions = {}
         self.data_map = {}
         self.pubnub_instances: dict[str, SnooPubNub] = {}
+        self.reauth_task: asyncio.Task | None = None
 
     async def refresh_tokens(self):
         # TODO: Figure out hwo to get this to work and not do a serializaiton exception
@@ -194,6 +154,7 @@ class Snoo:
                 except asyncio.CancelledError:
                     pass
         self.pubnub_instances = {}
+        self.reauth_task.cancel()
 
     def publish_callback(self, result, status):
         if status.is_error():
@@ -247,7 +208,7 @@ class Snoo:
             snoo_expiry = snoo_token["expiresIn"] / 1.5
             snoo_token = snoo_token["snoo"]["token"]
             self.tokens = AuthorizationInfo(snoo=snoo_token, aws_access=access, aws_id=_id, aws_refresh=ref)
-            asyncio.create_task(self.schedule_reauthorization(snoo_expiry))
+            self.reauth_task = asyncio.create_task(self.schedule_reauthorization(snoo_expiry))
         except InvalidSnooAuth as ex:
             raise ex
         except Exception as ex:
