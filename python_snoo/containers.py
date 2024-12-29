@@ -5,14 +5,14 @@ from mashumaro.mixins.json import DataClassJSONMixin
 
 
 class SnooStates(StrEnum):
-    BASELINE = "BASELINE"
-    LEVEL_1 = "LEVEL1"
-    LEVEL_2 = "LEVEL2"
-    LEVEL_3 = "LEVEL3"
-    LEVEL_4 = "LEVEL4"
-    STOP = "ONLINE"
-    PRETIMEOUT = "PRETIMEOUT"
-    TIMEOUT = "TIMEOUT"
+    BASELINE = "baseline"
+    LEVEL_1 = "level1"
+    LEVEL_2 = "level2"
+    LEVEL_3 = "level3"
+    LEVEL_4 = "level4"
+    STOP = "online"
+    PRETIMEOUT = "pretimeout"
+    TIMEOUT = "timeout"
 
 
 @dataclasses.dataclass
