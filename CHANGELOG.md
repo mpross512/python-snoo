@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.2.3 (2024-12-29)
+
+### Bug Fixes
+
+- Improve disconnect
+  ([`b55382c`](https://github.com/Lash-L/python-snoo/commit/b55382ca08b58ab359a92b2431380335974d9be8))
+
+
 ## v0.2.2 (2024-12-29)
 
 
