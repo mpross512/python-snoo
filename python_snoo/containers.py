@@ -15,6 +15,18 @@ class SnooStates(StrEnum):
     timeout = "TIMEOUT"
 
 
+class SnooEvents(StrEnum):
+    ACTIVITY_BUTTON = "activity_button"
+    TIMER = "timer"
+    POWER_BUTTON = "power_button"
+    CRY = "cry"
+    COMMAND = "command"
+    SAFETY_CLIP = "safety_clip"
+    LONG_ACTIVITY_PRESS = "long_activity_press"
+    RESTART = "restart"
+    INITIAL_STATUS_REQUESTED = "initial_status_requested"
+
+
 @dataclasses.dataclass
 class AuthorizationInfo:
     snoo: str
@@ -61,4 +73,4 @@ class SnooData(DataClassJSONMixin):
     event_time_ms: int
     state_machine: SnooStateMachine
     system_state: str
-    event: str
+    event: SnooEvents
