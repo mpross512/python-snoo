@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.2 (2024-12-30)
+
+### Bug Fixes
+
+- Improve containers
+  ([`16e9840`](https://github.com/Lash-L/python-snoo/commit/16e9840c9e2dcbd2359a4c3f9b482f7112ef35da))
+
+
 ## v0.3.1 (2024-12-30)
 
 ### Bug Fixes
