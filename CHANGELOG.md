@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.1 (2024-12-30)
+
+### Bug Fixes
+
+- Add status_requested
+  ([`03b637c`](https://github.com/Lash-L/python-snoo/commit/03b637c465533cd17dfe843c61155a046bc98628))
+
+
 ## v0.3.0 (2024-12-30)
 
 ### Features
