@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.0 (2024-12-30)
+
+### Features
+
+- Add SnooEvents
+  ([`dd17a60`](https://github.com/Lash-L/python-snoo/commit/dd17a6026dac891f6d862cafd4a8f4903a4bc846))
+
+
 ## v0.2.4 (2024-12-29)
 
 ### Bug Fixes
