@@ -1,4 +1,5 @@
 import dataclasses
+import datetime
 from enum import StrEnum
 
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -13,18 +14,17 @@ class SnooStates(StrEnum):
     stop = "ONLINE"
     pretimeout = "PRETIMEOUT"
     timeout = "TIMEOUT"
+    suspended = "SUSPENDED"
 
 
 class SnooEvents(StrEnum):
-    ACTIVITY_BUTTON = "activity_button"
     TIMER = "timer"
-    POWER_BUTTON = "power_button"
     CRY = "cry"
     COMMAND = "command"
     SAFETY_CLIP = "safety_clip"
     LONG_ACTIVITY_PRESS = "long_activity_press"
-    RESTART = "restart"
-    INITIAL_STATUS_REQUESTED = "initial_status_requested"
+    ACTIVITY = "activity"
+    POWER = "power"
     STATUS_REQUESTED = "status_requested"
 
 
@@ -63,6 +63,15 @@ class SnooStateMachine(DataClassJSONMixin):
     down_transition: str
     hold: str
     audio: str
+    time_left_timestamp: datetime.datetime | None = None
+
+    def __post_init__(self):
+        if self.time_left != -1:
+            self.time_left_timestamp = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+                seconds=self.time_left
+            )
+        else:
+            self.time_left_timestamp = None
 
 
 @dataclasses.dataclass
