@@ -25,6 +25,7 @@ class SnooEvents(StrEnum):
     LONG_ACTIVITY_PRESS = "long_activity_press"
     RESTART = "restart"
     INITIAL_STATUS_REQUESTED = "initial_status_requested"
+    STATUS_REQUESTED = "status_requested"
 
 
 @dataclasses.dataclass
