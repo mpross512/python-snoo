@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.3.3 (2025-01-20)
+
+### Bug Fixes
+
+- Add sticky_white_noise state
+  ([`a6d3a8a`](https://github.com/Lash-L/python-snoo/commit/a6d3a8a0416c8ae04c1de430ae0a97328890d4a1))
+
+
 ## v0.3.2 (2024-12-30)
 
 ### Bug Fixes
