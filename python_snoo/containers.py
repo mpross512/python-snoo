@@ -15,6 +15,7 @@ class SnooStates(StrEnum):
     pretimeout = "PRETIMEOUT"
     timeout = "TIMEOUT"
     suspended = "SUSPENDED"
+    STICKY_WHITE_NOISE_UPDATED = "sticky_white_noise_updated"
 
 
 class SnooEvents(StrEnum):
