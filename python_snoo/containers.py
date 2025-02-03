@@ -107,19 +107,3 @@ class SnooData(DataClassJSONMixin):
     state_machine: SnooStateMachine
     system_state: str
     event: SnooEvents
-
-
-f = {
-    "session_id": "4920164039595764112",
-    "state": "LEVEL4",
-    "is_active_session": "true",
-    "since_session_start_ms": 10152,
-    "time_left": 120,
-    "hold": "off",
-    "weaning": "off",
-    "audio": "on",
-    "up_transition": "NONE",
-    "down_transition": "LEVEL3",
-    "sticky_white_noise": "off",
-}
-SnooStateMachine.from_dict(f)
