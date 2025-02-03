@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.4.1 (2025-02-03)
+
+### Bug Fixes
+
+- Remove accidental code
+  ([`f15bd21`](https://github.com/Lash-L/python-snoo/commit/f15bd215cbd80947c8b3eca8d5573d29cc1d8c0c))
+
+
 ## v0.4.0 (2025-02-03)
 
 ### Features
