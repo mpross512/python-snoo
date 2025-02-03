@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.4.0 (2025-02-03)
+
+### Features
+
+- Save levels and fix bug with white noise
+  ([`a828468`](https://github.com/Lash-L/python-snoo/commit/a8284682ee4cfc203b3266b91b12e69d092ff14b))
+
+
 ## v0.3.3 (2025-01-20)
 
 ### Bug Fixes
