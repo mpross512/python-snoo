@@ -5,6 +5,15 @@ from enum import StrEnum
 from mashumaro.mixins.json import DataClassJSONMixin
 
 
+class SnooLevels(StrEnum):
+    baseline = "BASELINE"
+    level1 = "LEVEL1"
+    level2 = "LEVEL2"
+    level3 = "LEVEL3"
+    level4 = "LEVEL4"
+    stop = "ONLINE"
+
+
 class SnooStates(StrEnum):
     baseline = "BASELINE"
     level1 = "LEVEL1"
@@ -15,7 +24,6 @@ class SnooStates(StrEnum):
     pretimeout = "PRETIMEOUT"
     timeout = "TIMEOUT"
     suspended = "SUSPENDED"
-    STICKY_WHITE_NOISE_UPDATED = "sticky_white_noise_updated"
 
 
 class SnooEvents(StrEnum):
@@ -27,6 +35,7 @@ class SnooEvents(StrEnum):
     ACTIVITY = "activity"
     POWER = "power"
     STATUS_REQUESTED = "status_requested"
+    STICKY_WHITE_NOISE_UPDATED = "sticky_white_noise_updated"
 
 
 @dataclasses.dataclass
@@ -65,6 +74,7 @@ class SnooStateMachine(DataClassJSONMixin):
     hold: str
     audio: str
     time_left_timestamp: datetime.datetime | None = None
+    level: SnooLevels | None = None
 
     def __post_init__(self):
         if self.time_left != -1:
@@ -73,6 +83,18 @@ class SnooStateMachine(DataClassJSONMixin):
             )
         else:
             self.time_left_timestamp = None
+        if self.up_transition == "NONE" and self.down_transition == "NONE":
+            self.level = SnooLevels.stop
+        elif self.up_transition == SnooLevels.level1:
+            self.level = SnooLevels.baseline
+        elif self.up_transition == SnooLevels.level2:
+            self.level = SnooLevels.level1
+        elif self.up_transition == SnooLevels.level3:
+            self.level = SnooLevels.level2
+        elif self.up_transition == SnooLevels.level4:
+            self.level = SnooLevels.level3
+        elif self.down_transition == SnooLevels.level3:
+            self.level = SnooLevels.level4
 
 
 @dataclasses.dataclass
@@ -85,3 +107,19 @@ class SnooData(DataClassJSONMixin):
     state_machine: SnooStateMachine
     system_state: str
     event: SnooEvents
+
+
+f = {
+    "session_id": "4920164039595764112",
+    "state": "LEVEL4",
+    "is_active_session": "true",
+    "since_session_start_ms": 10152,
+    "time_left": 120,
+    "hold": "off",
+    "weaning": "off",
+    "audio": "on",
+    "up_transition": "NONE",
+    "down_transition": "LEVEL3",
+    "sticky_white_noise": "off",
+}
+SnooStateMachine.from_dict(f)
