@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.0 (2025-02-19)
+
+### Features
+
+- Add foundation for baby stuff
+  ([`cc7269e`](https://github.com/Lash-L/python-snoo/commit/cc7269e7d31a0383cfa2daf85789e9d17e6b5fc7))
+
+
 ## v0.5.0 (2025-02-19)
 
 ### Features
