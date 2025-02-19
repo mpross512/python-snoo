@@ -86,7 +86,7 @@ class SnooPubNub(SubscribeCallback):
                 for callback in self._subscriptions:
                     data = SnooData.from_dict(message.message)
                     _LOGGER.debug(data)
-                    callback(SnooData.from_dict(message.message))
+                    callback(data)
 
     def subscribe(self, update_callback: Callable[[SnooData], None]) -> Callable[[], None]:
         """Add an callback subscriber.

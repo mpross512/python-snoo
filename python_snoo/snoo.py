@@ -244,13 +244,6 @@ class Snoo:
         devs = [SnooDevice.from_dict(dev) for dev in resp["snoo"]]
         return devs
 
-    # async def set_volume_level(self, level, baby_id: str):
-    #     f = await self.session.patch(
-    #         self.snoo_baby_url + baby_id,
-    #         headers={"authorization": f"Bearer {self.tokens.aws_id}"},
-    #         json={"settings": {"minimalLevelVolume": level}},
-    #     )
-
     # lowest = 'lvl-2'
     # low='lvl-1'
     # normal='lvl10'
@@ -262,9 +255,3 @@ class Snoo:
     # normal='lvl10'
     # high='lvl+1'
     # highest='lvl+2'
-
-
-# {'timeout_min': 15, 'state': 'on', 'command': 'set_sticky_white_noise', 'ts': 1735237447471}
-# {'command': 'start_snoo', 'ts': 1735237642640}
-# {'command': 'go_to_state', 'ts': 1735237671846, 'state': 'LEVEL1', 'hold': 'off'}
-# {'state': 'ONLINE', 'hold': 'off', 'ts': 1735239968419, 'command': 'go_to_state'}

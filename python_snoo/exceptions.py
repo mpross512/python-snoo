@@ -8,3 +8,7 @@ class SnooAuthException(Exception):
 
 class SnooDeviceError(Exception):
     """Issue getting the device"""
+
+
+class SnooBabyError(Exception):
+    """Issue getting baby status"""

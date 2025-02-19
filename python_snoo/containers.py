@@ -1,6 +1,7 @@
 import dataclasses
 import datetime
 from enum import StrEnum
+from typing import Any
 
 from mashumaro.mixins.json import DataClassJSONMixin
 
@@ -107,3 +108,32 @@ class SnooData(DataClassJSONMixin):
     state_machine: SnooStateMachine
     system_state: str
     event: SnooEvents
+
+
+@dataclasses.dataclass
+class BabySettings(DataClassJSONMixin):
+    carRideMode: bool
+    daytimeStart: int
+    minimalLevel: str
+    minimalLevelVolume: str
+    motionLimiter: bool
+    responsivenessLevel: str
+    soothingLevelVolume: str
+    weaning: bool
+
+
+@dataclasses.dataclass
+class BabyData(DataClassJSONMixin):
+    _id: str
+    babyName: str
+    birthDate: str
+    breathSettingHistory: list
+    createdAt: str
+    disabledLimiter: bool
+    expectedBirthDate: str
+    pictures: list
+    preemie: Any  # Not sure what datatype this is yet
+    settings: BabySettings
+    sex: Any  # Not sure what datatype this is yet
+    startedUsingSnooAt: str
+    updatedAt: str
