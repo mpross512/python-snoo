@@ -175,8 +175,13 @@ class Snoo:
     async def stop_snoo(self, device: SnooDevice):
         await self.send_command("go_to_state", device, **{"state": "ONLINE", "hold": "off"})
 
-    async def set_level(self, device: SnooDevice, level: SnooStates):
-        await self.send_command("go_to_state", device, **{"state": level.value, "hold": "off"})
+    async def set_level(self, device: SnooDevice, level: SnooStates, hold: bool = False):
+        if hold:
+            hold = "on"
+        else:
+            hold = "off"
+
+        await self.send_command("go_to_state", device, **{"state": level.value, "hold": hold})
 
     async def set_sticky_white_noise(self, device: SnooDevice, on: bool):
         await self.send_command(
