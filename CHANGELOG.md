@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.5.0 (2025-02-19)
+
+### Features
+
+- Add hold for set_level
+  ([`91d1800`](https://github.com/Lash-L/python-snoo/commit/91d180015f76e86bb5c9dd9e61c3babdb202eaf9))
+
+
 ## v0.4.1 (2025-02-03)
 
 ### Bug Fixes
