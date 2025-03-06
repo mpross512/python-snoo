@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.1 (2025-03-06)
+
+### Bug Fixes
+
+- Default some items for None for non-matching responses
+  ([`00b77a8`](https://github.com/Lash-L/python-snoo/commit/00b77a800fbefb72509775423c2349e45e1cfe8d))
+
+
 ## v0.6.0 (2025-02-19)
 
 ### Features
