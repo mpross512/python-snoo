@@ -50,15 +50,15 @@ class AuthorizationInfo:
 @dataclasses.dataclass
 class SnooDevice(DataClassJSONMixin):
     serialNumber: str
-    deviceType: int
     firmwareVersion: str
     babyIds: list[str]
     name: str
-    presence: dict
-    presenceIoT: dict
-    awsIoT: dict
-    lastSSID: dict
-    provisionedAt: str
+    deviceType: int | None = None
+    presence: dict | None = None
+    presenceIoT: dict | None = None
+    awsIoT: dict | None = None
+    lastSSID: dict | None = None
+    provisionedAt: str | None = None
 
 
 @dataclasses.dataclass
@@ -135,5 +135,5 @@ class BabyData(DataClassJSONMixin):
     preemie: Any  # Not sure what datatype this is yet
     settings: BabySettings
     sex: Any  # Not sure what datatype this is yet
-    startedUsingSnooAt: str
-    updatedAt: str
+    startedUsingSnooAt: str | None = None
+    updatedAt: str | None = None
