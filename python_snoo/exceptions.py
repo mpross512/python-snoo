@@ -1,14 +1,18 @@
-class InvalidSnooAuth(Exception):
+class SnooException(Exception):
+    """A base exception for snoo issues."""
+
+
+class InvalidSnooAuth(SnooException):
     """An exception when the user gave the wrong login info."""
 
 
-class SnooAuthException(Exception):
+class SnooAuthException(SnooException):
     """All other authentication exceptions"""
 
 
-class SnooDeviceError(Exception):
+class SnooDeviceError(SnooException):
     """Issue getting the device"""
 
 
-class SnooBabyError(Exception):
+class SnooBabyError(SnooException):
     """Issue getting baby status"""
