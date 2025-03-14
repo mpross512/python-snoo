@@ -16,7 +16,7 @@ from .containers import (
     SnooDevice,
     SnooStates,
 )
-from .exceptions import InvalidSnooAuth, SnooAuthException, SnooDeviceError
+from .exceptions import InvalidSnooAuth, SnooAuthException, SnooCommandException, SnooDeviceError
 from .pubnub_async import SnooPubNub
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,12 +162,15 @@ class Snoo:
 
     async def send_command(self, command: str, device: SnooDevice, **kwargs):
         ts = int(dt.now().timestamp() * 10_000_000)
-        await (
-            self.pubnub.publish()
-            .channel(f"ControlCommand.{device.serialNumber}")
-            .message({"ts": ts, "command": command, **kwargs})
-            .future()
-        )
+        try:
+            await (
+                self.pubnub.publish()
+                .channel(f"ControlCommand.{device.serialNumber}")
+                .message({"ts": ts, "command": command, **kwargs})
+                .future()
+            )
+        except Exception as e:
+            raise SnooCommandException from e
 
     async def start_snoo(self, device: SnooDevice):
         await self.send_command("start_snoo", device)
