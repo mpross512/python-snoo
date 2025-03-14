@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.3 (2025-03-14)
+
+### Bug Fixes
+
+- Catch errors on send command
+  ([`73a1d32`](https://github.com/Lash-L/python-snoo/commit/73a1d3289675ad56566b4edf74e2756dd3a88168))
+
+
 ## v0.6.2 (2025-03-14)
 
 ### Bug Fixes
