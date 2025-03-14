@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.2 (2025-03-14)
+
+### Bug Fixes
+
+- Set base exception type
+  ([`139ab40`](https://github.com/Lash-L/python-snoo/commit/139ab401ee0e15dbbfe37455171e19d343a3b6f5))
+
+
 ## v0.6.1 (2025-03-06)
 
 ### Bug Fixes
