@@ -25,6 +25,12 @@ class SnooStates(StrEnum):
     pretimeout = "PRETIMEOUT"
     timeout = "TIMEOUT"
     suspended = "SUSPENDED"
+    weaning_baseline = "WEANING_BASELINE"
+    global_settings = "GLOBAL_SETTINGS"
+    unrecoverable_suspended = "UNRECOVERABLE_SUSPENDED"
+    unrecoverable_error = "UNRECOVERABLE_ERROR"
+    none = "NONE"
+    manual = "MANUAL"
 
 
 class SnooEvents(StrEnum):
