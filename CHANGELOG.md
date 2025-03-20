@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.6.4 (2025-03-20)
+
+### Bug Fixes
+
+- Missing states
+  ([`a380c76`](https://github.com/Lash-L/python-snoo/commit/a380c76ee7b839158f67249fe39a2cd0a2bea860))
+
+
 ## v0.6.3 (2025-03-14)
 
 ### Bug Fixes
