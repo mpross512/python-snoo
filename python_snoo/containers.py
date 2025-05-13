@@ -44,6 +44,7 @@ class SnooEvents(StrEnum):
     STATUS_REQUESTED = "status_requested"
     STICKY_WHITE_NOISE_UPDATED = "sticky_white_noise_updated"
     CONFIG_CHANGE = "config_change"
+    RESTART = "restart"
 
 
 @dataclasses.dataclass
