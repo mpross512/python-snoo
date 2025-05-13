@@ -1,9 +1,15 @@
 # CHANGELOG
 
 
+## v0.6.6 (2025-05-13)
+
+
 ## v0.6.5 (2025-03-27)
 
 ### Bug Fixes
+
+- Add missing event
+  ([`16ac0bb`](https://github.com/Lash-L/python-snoo/commit/16ac0bb5150ad06594a36957968bac7a6490e2a2))
 
 - Missing config_change event
   ([`4fc36c8`](https://github.com/Lash-L/python-snoo/commit/4fc36c88232ffcf986699691caea1da20f0b304b))
