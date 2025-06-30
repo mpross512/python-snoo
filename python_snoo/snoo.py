@@ -227,6 +227,7 @@ class Snoo:
         return self.tokens
 
     async def schedule_reauthorization(self, snoo_expiry: int):
+        _LOGGER.info("Snoo token has expired - reauthorizing...")
         try:
             await asyncio.sleep(snoo_expiry)
             await self.authorize()
@@ -235,7 +236,7 @@ class Snoo:
             self.pubnub.config.auth_token = self.tokens.snoo
 
         except Exception as ex:
-            print(f"Error during reauthorization: {ex}")
+            _LOGGER.exception(f"Error during reauthorization: {ex}")
 
     async def get_devices(self) -> list[SnooDevice]:
         hdrs = self.generate_snoo_auth_headers(self.tokens.aws_id)

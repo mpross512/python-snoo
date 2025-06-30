@@ -42,6 +42,10 @@ class SnooPubNub(SubscribeCallback):
 
     def update_token(self, token: str):
         self.pubnub.config.auth_key = token
+        if self.task:
+            self.task.cancel()  # cancel the task if it exists.
+            self.task = None
+        asyncio.create_task(self.run())  # restart the task
 
     def presence(self, pubnub: PubNubAsyncio, presence):
         _LOGGER.debug("Received new presence: %s", presence)
