@@ -1,18 +1,20 @@
-# snoo.py
 import asyncio
 import json
 import logging
 import secrets
 import uuid
 from datetime import datetime as dt
+from typing import Callable
 
 import aiohttp
+import aiomqtt
 from pubnub.enums import PNReconnectionPolicy
 from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub_asyncio import PubNubAsyncio
 
 from .containers import (
     AuthorizationInfo,
+    SnooData,
     SnooDevice,
     SnooStates,
 )
@@ -23,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Snoo:
-    def __init__(self, email, password, clientsession: aiohttp.ClientSession):
+    def __init__(self, email: str, password: str, clientsession: aiohttp.ClientSession):
         self.email = email
         self.password = password
         self.session = clientsession
@@ -87,6 +89,9 @@ class Snoo:
         self.data_map = {}
         self.pubnub_instances: dict[str, SnooPubNub] = {}
         self.reauth_task: asyncio.Task | None = None
+        self._client_map: dict[str, aiomqtt.Client] = {}
+        self._mqtt_tasks: dict[str, asyncio.Task] = {}
+        self._client_cond = asyncio.Condition()
 
     async def refresh_tokens(self):
         # TODO: Figure out hwo to get this to work and not do a serializaiton exception
@@ -106,12 +111,12 @@ class Snoo:
         if self.tokens is None:
             raise Exception("You need to authenticate before you continue")
 
-    def generate_snoo_auth_headers(self, amz_token):
+    def generate_snoo_auth_headers(self, amz_token: str) -> dict[str, str]:
         hdrs = self.snoo_auth_hdr.copy()
         hdrs["authorization"] = f"Bearer {amz_token}"
         return hdrs
 
-    def generate_snoo_data_url(self, device_id, snoo_token):
+    def generate_snoo_data_url(self, device_id: str | float, snoo_token: str) -> str:
         if isinstance(device_id, float):
             device_id = str(int(device_id))
         req_uuid = uuid.uuid1()
@@ -122,13 +127,13 @@ class Snoo:
         url = f"https://happiestbaby.pubnubapi.com/v2/history/sub-key/sub-c-97bade2a-483d-11e6-8b3b-02ee2ddab7fe/channel/ActivityState.{device_id}?pnsdk=PubNub-Kotlin%2F7.4.0&l_pub=0.064&auth={snoo_token}&requestid={req_uuid}&include_token=true&count=1&include_meta=false&reverse=false&uuid=android_{app_dev_id}_{dev_uuid}"
         return url
 
-    def generate_id(self):
+    def generate_id(self) -> str:
         app_dev_id_len = 24
         n = app_dev_id_len * 3 // 4
         app_dev_id = secrets.token_urlsafe(n)
         return app_dev_id
 
-    async def subscribe(self, device: SnooDevice, function):
+    async def subscribe(self, device: SnooDevice, function: Callable):
         pnconfig = PNConfiguration()
         pnconfig.subscribe_key = "sub-c-97bade2a-483d-11e6-8b3b-02ee2ddab7fe"
         pnconfig.publish_key = "pub-c-699074b0-7664-4be2-abf8-dcbb9b6cd2bf"
@@ -154,7 +159,15 @@ class Snoo:
                 except asyncio.CancelledError:
                     pass
         self.pubnub_instances = {}
-        self.reauth_task.cancel()
+
+        for task in self._mqtt_tasks.values():
+            task.cancel()
+        await asyncio.gather(*self._mqtt_tasks.values(), return_exceptions=True)
+        self._mqtt_tasks = {}
+
+        if self.reauth_task:
+            self.reauth_task.cancel()
+            self.reauth_task = None
 
     def publish_callback(self, result, status):
         if status.is_error():
@@ -163,12 +176,24 @@ class Snoo:
     async def send_command(self, command: str, device: SnooDevice, **kwargs):
         ts = int(dt.now().timestamp() * 10_000_000)
         try:
-            await (
-                self.pubnub.publish()
-                .channel(f"ControlCommand.{device.serialNumber}")
-                .message({"ts": ts, "command": command, **kwargs})
-                .future()
-            )
+            # Acquire the condition lock
+            async with self._client_cond:
+                try:
+                    # Wait up to 30 seconds for the client to connect.
+                    # The wait_for() method will wait until the lambda returns True.
+                    # It releases the lock while waiting and re-acquires it before returning.
+                    await asyncio.wait_for(
+                        self._client_cond.wait_for(lambda: device.serialNumber in self._client_map), timeout=30.0
+                    )
+                except asyncio.TimeoutError:
+                    _LOGGER.error(f"Timed out waiting for client for device {device.serialNumber} to connect.")
+                    raise SnooCommandException(f"Client for device {device.serialNumber} is not connected.") from None
+
+                # Once wait_for returns, we know the client exists and we hold the lock.
+                await self._client_map[device.serialNumber].publish(
+                    topic=f"{device.awsIoT.thingName}/state_machine/control",
+                    payload=json.dumps({"ts": ts, "command": command, **kwargs}),
+                )
         except Exception as e:
             raise SnooCommandException from e
 
@@ -196,7 +221,7 @@ class Snoo:
     async def get_status(self, device: SnooDevice):
         await self.send_command("send_status", device)
 
-    async def auth_amazon(self):
+    async def auth_amazon(self) -> dict:
         r = await self.session.post(self.aws_auth_url, data=self.aws_auth_data, headers=self.aws_auth_hdr)
         resp = await r.json(content_type=None)
         if "__type" in resp and resp["__type"] == "NotAuthorizedException":
@@ -204,7 +229,7 @@ class Snoo:
         result = resp["AuthenticationResult"]
         return result
 
-    async def auth_snoo(self, id_token):
+    async def auth_snoo(self, id_token: str) -> dict:
         hdrs = self.generate_snoo_auth_headers(id_token)
         r = await self.session.post(self.snoo_auth_url, data=self.snoo_auth_data, headers=hdrs)
         return await r.json()
@@ -226,7 +251,7 @@ class Snoo:
             raise SnooAuthException from ex
         return self.tokens
 
-    async def schedule_reauthorization(self, snoo_expiry: int):
+    async def schedule_reauthorization(self, snoo_expiry: float):
         _LOGGER.info("Snoo token has expired - reauthorizing...")
         try:
             await asyncio.sleep(snoo_expiry)
@@ -248,14 +273,61 @@ class Snoo:
         devs = [SnooDevice.from_dict(dev) for dev in resp["snoo"]]
         return devs
 
-    # lowest = 'lvl-2'
-    # low='lvl-1'
-    # normal='lvl10'
-    # high='lvl+1'
-    # highest='lvl+2'
-    #
-    #
-    # soothing
-    # normal='lvl10'
-    # high='lvl+1'
-    # highest='lvl+2'
+    def start_subscribe(self, device: SnooDevice, function: Callable):
+        if device.serialNumber in self._mqtt_tasks and not self._mqtt_tasks[device.serialNumber].done():
+            _LOGGER.warning(f"Subscription task for device {device.serialNumber} is already running.")
+            return
+
+        self._mqtt_tasks[device.serialNumber] = asyncio.create_task(self.subscribe_mqtt(device, function))
+
+    async def subscribe_mqtt(self, device: SnooDevice, function: Callable):
+        host = device.awsIoT.clientEndpoint
+        port = 443
+        websocket_path = "/mqtt"
+        token = self.tokens.aws_id
+        headers = {"token": token}
+        password = None
+        client_id = f"HA_{uuid.uuid4()}"
+        user_name = "?SDK=iOS&Version=2.40.1"
+
+        logging.debug(f"Attempting to connect to wss://{host}:{port}{websocket_path}")
+
+        try:
+            async with aiomqtt.Client(
+                hostname=host,
+                port=port,
+                username=user_name,
+                password=password,
+                identifier=client_id,
+                transport="websockets",
+                websocket_path=websocket_path,
+                websocket_headers=headers,
+                tls_params=aiomqtt.TLSParameters(),
+                protocol=aiomqtt.ProtocolVersion.V31,
+                timeout=10,
+            ) as client:
+                logging.info(f"✅ Successfully connected to MQTT broker for {device.serialNumber}!")
+
+                # Acquire the lock, add the client to the map, and notify waiting tasks.
+                async with self._client_cond:
+                    self._client_map[device.serialNumber] = client
+                    self._client_cond.notify_all()
+
+                topic = f"{device.awsIoT.thingName}/state_machine/activity_state"
+                await client.subscribe(topic)
+                logging.info(f"Subscribed to topic: {topic}")
+
+                async for message in client.messages:
+                    logging.debug(f"Received message on topic '{message.topic}': {message.payload.decode()}")
+                    function(SnooData.from_json(message.payload.decode()))
+
+        except aiomqtt.MqttError as e:
+            logging.error(f"MQTT connection for {device.serialNumber} failed: {e}")
+        except Exception as e:
+            logging.error(f"MQTT connection for {device.serialNumber} failed with an unexpected error: {e}")
+        finally:
+            # When the connection is lost, remove the client from the map.
+            logging.info(f"MQTT connection closed for {device.serialNumber}.")
+            async with self._client_cond:
+                if device.serialNumber in self._client_map:
+                    del self._client_map[device.serialNumber]

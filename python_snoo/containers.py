@@ -56,6 +56,14 @@ class AuthorizationInfo:
 
 
 @dataclasses.dataclass
+class AwsIOT:
+    awsRegion: str
+    clientEndpoint: str
+    clientReady: bool
+    thingName: str
+
+
+@dataclasses.dataclass
 class SnooDevice(DataClassJSONMixin):
     serialNumber: str
     firmwareVersion: str
@@ -64,7 +72,7 @@ class SnooDevice(DataClassJSONMixin):
     deviceType: int | None = None
     presence: dict | None = None
     presenceIoT: dict | None = None
-    awsIoT: dict | None = None
+    awsIoT: AwsIOT | None = None
     lastSSID: dict | None = None
     provisionedAt: str | None = None
 
