@@ -1,6 +1,9 @@
 # CHANGELOG
 
 
+## v0.8.0 (2025-08-12)
+
+
 ## v0.7.0 (2025-08-10)
 
 ### Features
@@ -15,6 +18,11 @@ feat: enable fetching activity & logging diapers for babies
 
 
 ## v0.6.7 (2025-06-30)
+
+### Features
+
+- Convert to MQTT
+  ([`35e72a3`](https://github.com/Lash-L/python-snoo/commit/35e72a3feeed865d655855ff81e4263a85d7688f))
 
 
 ## v0.6.6 (2025-05-13)
