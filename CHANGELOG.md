@@ -1,7 +1,28 @@
 # CHANGELOG
 
 
+## v0.7.0 (2025-08-10)
+
+### Features
+
+- Enable fetching activity and logging diapers for babies
+  ([`91ba36d`](https://github.com/Lash-L/python-snoo/commit/91ba36d3a56e01cdb56a1ba7b25015d9268b2ef2))
+
+feat: enable fetching activity & logging diapers for babies
+
+- Enable fetching activity & logging diapers for babies
+  ([`31b86da`](https://github.com/Lash-L/python-snoo/commit/31b86da748ffeafb1e9ee5d365d5c8ecd8daae8d))
+
+
+## v0.6.7 (2025-06-30)
+
+
 ## v0.6.6 (2025-05-13)
+
+### Bug Fixes
+
+- Improve reauth
+  ([`434a9d4`](https://github.com/Lash-L/python-snoo/commit/434a9d401b36f9d4b288623f0cb879646ae78ee4))
 
 
 ## v0.6.5 (2025-03-27)

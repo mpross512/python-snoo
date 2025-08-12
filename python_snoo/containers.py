@@ -1,7 +1,7 @@
 import dataclasses
 import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Union
 
 from mashumaro.mixins.json import DataClassJSONMixin
 
@@ -45,6 +45,13 @@ class SnooEvents(StrEnum):
     STICKY_WHITE_NOISE_UPDATED = "sticky_white_noise_updated"
     CONFIG_CHANGE = "config_change"
     RESTART = "restart"
+
+
+class DiaperTypes(StrEnum):
+    """Diaper change types, matching what the Happiest Baby app uses"""
+
+    WET = "pee"
+    DIRTY = "poo"
 
 
 @dataclasses.dataclass
@@ -148,8 +155,58 @@ class BabyData(DataClassJSONMixin):
     disabledLimiter: bool
     expectedBirthDate: str
     pictures: list
-    preemie: Any  # Not sure what datatype this is yet
     settings: BabySettings
-    sex: Any  # Not sure what datatype this is yet
+    sex: str
+    preemie: Any | None = None  # Not sure what datatype this is yet & may not be supplied - boolean?
     startedUsingSnooAt: str | None = None
     updatedAt: str | None = None
+
+
+@dataclasses.dataclass
+class DiaperData(DataClassJSONMixin):
+    """Data for diaper change activities"""
+
+    types: list[DiaperTypes]
+
+    def __post_init__(self):
+        if not self.types:
+            raise ValueError("DiaperData.types cannot be empty or None")
+
+        self.types = [DiaperTypes(dt) for dt in self.types]
+
+
+@dataclasses.dataclass
+class BreastfeedingData(DataClassJSONMixin):
+    lastUsedBreast: str
+    totalDuration: int
+    left: dict | None = None
+    right: dict | None = None
+
+
+@dataclasses.dataclass
+class DiaperActivity(DataClassJSONMixin):
+    id: str
+    type: str
+    startTime: str
+    babyId: str
+    userId: str
+    data: DiaperData
+    createdAt: str
+    updatedAt: str
+    note: str | None = None
+
+
+@dataclasses.dataclass
+class BreastfeedingActivity(DataClassJSONMixin):
+    id: str
+    type: str
+    startTime: str
+    endTime: str
+    babyId: str
+    userId: str
+    data: BreastfeedingData
+    createdAt: str
+    updatedAt: str
+
+
+Activity = Union[DiaperActivity, BreastfeedingActivity]
