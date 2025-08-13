@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.8.2 (2025-08-13)
+
+### Bug Fixes
+
+- Create ssl context safely
+  ([`ec4542e`](https://github.com/Lash-L/python-snoo/commit/ec4542e314396682588fc2c07bbd47d0542af36b))
+
+
 ## v0.8.1 (2025-08-13)
 
 ### Bug Fixes
