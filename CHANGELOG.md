@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.8.1 (2025-08-13)
+
+### Bug Fixes
+
+- Add aiomqtt
+  ([`10c0f50`](https://github.com/Lash-L/python-snoo/commit/10c0f5092892c0c9d1c490120102a30afed73211))
+
+
 ## v0.8.0 (2025-08-12)
 
 
