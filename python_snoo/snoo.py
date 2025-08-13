@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import secrets
+import ssl
 import uuid
 from datetime import datetime as dt
 from typing import Callable
@@ -292,6 +293,10 @@ class Snoo:
 
         logging.debug(f"Attempting to connect to wss://{host}:{port}{websocket_path}")
 
+        # The default SSL context creation is a blocking I/O operation.
+        # Run it in a separate thread to avoid blocking the Home Assistant event loop.
+        ssl_context = await asyncio.to_thread(ssl.create_default_context)
+
         try:
             async with aiomqtt.Client(
                 hostname=host,
@@ -302,7 +307,7 @@ class Snoo:
                 transport="websockets",
                 websocket_path=websocket_path,
                 websocket_headers=headers,
-                tls_params=aiomqtt.TLSParameters(),
+                tls_context=ssl_context,
                 protocol=aiomqtt.ProtocolVersion.V31,
                 timeout=10,
             ) as client:
