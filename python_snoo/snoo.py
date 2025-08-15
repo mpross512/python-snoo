@@ -92,21 +92,42 @@ class Snoo:
         self.reauth_task: asyncio.Task | None = None
         self._client_map: dict[str, aiomqtt.Client] = {}
         self._mqtt_tasks: dict[str, asyncio.Task] = {}
+        self._mqtt_callbacks: dict[str, tuple[SnooDevice, Callable]] = {}
         self._client_cond = asyncio.Condition()
 
-    async def refresh_tokens(self):
-        # TODO: Figure out hwo to get this to work and not do a serializaiton exception
+    async def refresh_tokens(self) -> int:
+        """Refreshes AWS Cognito tokens and returns the new expiration time in seconds."""
+        _LOGGER.info("AWS Cognito tokens expired, refreshing...")
+        if not self.tokens or not self.tokens.aws_refresh:
+            _LOGGER.error("No refresh token available. A full re-authentication is required.")
+            raise SnooAuthException("Missing refresh token.")
+
         data = {
             "AuthParameters": {"REFRESH_TOKEN": self.tokens.aws_refresh},
             "AuthFlow": "REFRESH_TOKEN_AUTH",
             "ClientId": "6kqofhc8hm394ielqdkvli0oea",
         }
-        r = await self.session.post(self.aws_auth_url, data=data, headers=self.aws_auth_hdr)
+        r = await self.session.post(self.aws_auth_url, json=data, headers=self.aws_auth_hdr)
         resp = await r.json(content_type=None)
-        if "__type" in resp and resp["__type"] == "NotAuthorizedException":
-            raise InvalidSnooAuth()
-        result = resp["AuthenticationResult"]
-        self.tokens = AuthorizationInfo(aws_id=result[""])
+
+        if r.status >= 400:
+            _LOGGER.error(f"Failed to refresh tokens. Status: {r.status}, Response: {resp}")
+            raise InvalidSnooAuth(f"Token refresh failed: {resp.get('message', 'Unknown error')}")
+
+        result = resp.get("AuthenticationResult")
+        if not result:
+            _LOGGER.error(f"Invalid response during token refresh: {resp}")
+            raise SnooAuthException("Token refresh response missing 'AuthenticationResult'.")
+
+        # Update tokens with the new ones from the response
+        self.tokens = AuthorizationInfo(
+            snoo=self.tokens.snoo,
+            aws_access=result["AccessToken"],
+            aws_id=result["IdToken"],
+            aws_refresh=result.get("RefreshToken", self.tokens.aws_refresh),
+        )
+        _LOGGER.info("✅ Successfully refreshed AWS Cognito tokens.")
+        return result.get("ExpiresIn", 3600)
 
     def check_tokens(self):
         if self.tokens is None:
@@ -165,6 +186,7 @@ class Snoo:
             task.cancel()
         await asyncio.gather(*self._mqtt_tasks.values(), return_exceptions=True)
         self._mqtt_tasks = {}
+        self._mqtt_callbacks = {}
 
         if self.reauth_task:
             self.reauth_task.cancel()
@@ -181,8 +203,6 @@ class Snoo:
             async with self._client_cond:
                 try:
                     # Wait up to 30 seconds for the client to connect.
-                    # The wait_for() method will wait until the lambda returns True.
-                    # It releases the lock while waiting and re-acquires it before returning.
                     await asyncio.wait_for(
                         self._client_cond.wait_for(lambda: device.serialNumber in self._client_map), timeout=30.0
                     )
@@ -241,28 +261,60 @@ class Snoo:
             access = amz["AccessToken"]
             _id = amz["IdToken"]
             ref = amz["RefreshToken"]
-            snoo_token = await self.auth_snoo(_id)
-            snoo_expiry = snoo_token["expiresIn"] / 1.5
-            snoo_token = snoo_token["snoo"]["token"]
+            expires_in = amz["ExpiresIn"]
+
+            snoo_token_data = await self.auth_snoo(_id)
+            snoo_token = snoo_token_data["snoo"]["token"]
+
             self.tokens = AuthorizationInfo(snoo=snoo_token, aws_access=access, aws_id=_id, aws_refresh=ref)
-            self.reauth_task = asyncio.create_task(self.schedule_reauthorization(snoo_expiry))
+
+            if self.reauth_task:
+                self.reauth_task.cancel()
+
+            # Schedule reauthorization with a 5-minute buffer before expiry
+            reauth_delay = max(expires_in - 300, 0)
+            self.reauth_task = asyncio.create_task(self.schedule_reauthorization(reauth_delay))
+            _LOGGER.info(f"Authorization successful. Next token refresh scheduled in {reauth_delay} seconds.")
+
         except InvalidSnooAuth as ex:
             raise ex
         except Exception as ex:
             raise SnooAuthException from ex
         return self.tokens
 
-    async def schedule_reauthorization(self, snoo_expiry: float):
-        _LOGGER.info("Snoo token has expired - reauthorizing...")
+    async def schedule_reauthorization(self, expiry_seconds: float):
         try:
-            await asyncio.sleep(snoo_expiry)
-            await self.authorize()
-            for instance in self.pubnub_instances.values():
-                instance.update_token(self.tokens.snoo)
-            self.pubnub.config.auth_token = self.tokens.snoo
+            await asyncio.sleep(expiry_seconds)
+            _LOGGER.info("Executing scheduled token refresh...")
 
-        except Exception as ex:
-            _LOGGER.exception(f"Error during reauthorization: {ex}")
+            new_expires_in = await self.refresh_tokens()
+
+            _LOGGER.info("Restarting MQTT subscriptions with new token...")
+            # Cancel all existing MQTT tasks
+            for task in self._mqtt_tasks.values():
+                task.cancel()
+            await asyncio.gather(*self._mqtt_tasks.values(), return_exceptions=True)
+            self._mqtt_tasks.clear()
+
+            # The `finally` block in `subscribe_mqtt` should clear the `_client_map`
+            # as connections close.
+
+            # Re-subscribe for all previously active subscriptions
+            for device_sn, (device, function) in self._mqtt_callbacks.items():
+                _LOGGER.info(f"Re-establishing MQTT subscription for device {device_sn}")
+                self.start_subscribe(device, function)
+
+            _LOGGER.info("✅ MQTT subscriptions restarted successfully.")
+
+            # Schedule the *next* reauthorization
+            reauth_delay = max(new_expires_in - 300, 0)
+            self.reauth_task = asyncio.create_task(self.schedule_reauthorization(reauth_delay))
+            _LOGGER.info(f"Next token refresh scheduled in {reauth_delay} seconds.")
+
+        except asyncio.CancelledError:
+            _LOGGER.info("Reauthorization task was cancelled.")
+        except Exception:
+            _LOGGER.exception("An unexpected error occurred during reauthorization.")
 
     async def get_devices(self) -> list[SnooDevice]:
         hdrs = self.generate_snoo_auth_headers(self.tokens.aws_id)
@@ -278,6 +330,9 @@ class Snoo:
         if device.serialNumber in self._mqtt_tasks and not self._mqtt_tasks[device.serialNumber].done():
             _LOGGER.warning(f"Subscription task for device {device.serialNumber} is already running.")
             return
+
+        # Store the device and callback function for re-subscription after re-auth
+        self._mqtt_callbacks[device.serialNumber] = (device, function)
 
         self._mqtt_tasks[device.serialNumber] = asyncio.create_task(self.subscribe_mqtt(device, function))
 
