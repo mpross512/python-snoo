@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.8.3 (2025-08-15)
+
+### Bug Fixes
+
+- Reauth
+  ([`7c1c4eb`](https://github.com/Lash-L/python-snoo/commit/7c1c4eb1e40dac20d273d7c44cbad65fc569e64f))
+
+
 ## v0.8.2 (2025-08-13)
 
 ### Bug Fixes
