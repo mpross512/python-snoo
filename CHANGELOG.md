@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v0.9.0 (2025-08-18)
+
+### Features
+
+- Expose weaning_baseline enum value ([#44](https://github.com/Lash-L/python-snoo/pull/44),
+  [`62608a3`](https://github.com/Lash-L/python-snoo/commit/62608a3f41dd836c8130aa266e19d0a9541af1b8))
+
+WEANING_BASELINE is the same as BASELINE, but without motion.
+
+Co-authored-by: Dave Reisner <dreisner@google.com>
+
+
 ## v0.8.3 (2025-08-15)
 
 ### Bug Fixes
