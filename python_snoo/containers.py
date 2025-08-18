@@ -8,6 +8,7 @@ from mashumaro.mixins.json import DataClassJSONMixin
 
 class SnooLevels(StrEnum):
     baseline = "BASELINE"
+    weaning_baseline = "WEANING_BASELINE"
     level1 = "LEVEL1"
     level2 = "LEVEL2"
     level3 = "LEVEL3"
