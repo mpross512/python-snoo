@@ -150,15 +150,15 @@ class BabySettings(DataClassJSONMixin):
 class BabyData(DataClassJSONMixin):
     _id: str
     babyName: str
-    birthDate: str
     breathSettingHistory: list
     createdAt: str
     disabledLimiter: bool
-    expectedBirthDate: str
     pictures: list
     settings: BabySettings
     sex: str
     preemie: Any | None = None  # Not sure what datatype this is yet & may not be supplied - boolean?
+    birthDate: str | None = None
+    expectedBirthDate: str | None = None
     startedUsingSnooAt: str | None = None
     updatedAt: str | None = None
 

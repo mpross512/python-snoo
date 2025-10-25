@@ -15,11 +15,12 @@ from pubnub.pubnub_asyncio import PubNubAsyncio
 
 from .containers import (
     AuthorizationInfo,
+    BabyData,
     SnooData,
     SnooDevice,
     SnooStates,
 )
-from .exceptions import InvalidSnooAuth, SnooAuthException, SnooCommandException, SnooDeviceError
+from .exceptions import InvalidSnooAuth, SnooAuthException, SnooBabyError, SnooCommandException, SnooDeviceError
 from .pubnub_async import SnooPubNub
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class Snoo:
         self.snoo_auth_url = "https://api-us-east-1-prod.happiestbaby.com/us/me/v10/pubnub/authorize"
         self.snoo_devices_url = "https://api-us-east-1-prod.happiestbaby.com/hds/me/v11/devices"
         self.snoo_data_url = "https://happiestbaby.pubnubapi.com"
-        self.snoo_baby_url = "https://api-us-east-1-prod.happiestbaby.com/us/me/v10/babies/"
+        self.snoo_baby_url = "https://api-us-east-1-prod.happiestbaby.com/us/me/v10/babies"
         self.aws_auth_hdr = {
             "x-amz-target": "AWSCognitoIdentityProviderService.InitiateAuth",
             "accept-language": "US",
@@ -325,6 +326,16 @@ class Snoo:
             raise SnooDeviceError from ex
         devs = [SnooDevice.from_dict(dev) for dev in resp["snoo"]]
         return devs
+    
+    async def get_babies(self) -> list[BabyData]:
+        hdrs = self.generate_snoo_auth_headers(self.tokens.aws_id)
+        try:
+            r = await self.session.get(self.snoo_baby_url, headers=hdrs)
+            resp = await r.json()
+        except Exception as ex:
+            raise SnooBabyError from ex
+        babies = [BabyData.from_dict(baby) for baby in resp]
+        return babies
 
     def start_subscribe(self, device: SnooDevice, function: Callable):
         if device.serialNumber in self._mqtt_tasks and not self._mqtt_tasks[device.serialNumber].done():
