@@ -326,7 +326,7 @@ class Snoo:
             raise SnooDeviceError from ex
         devs = [SnooDevice.from_dict(dev) for dev in resp["snoo"]]
         return devs
-    
+
     async def get_babies(self) -> list[BabyData]:
         hdrs = self.generate_snoo_auth_headers(self.tokens.aws_id)
         try:
